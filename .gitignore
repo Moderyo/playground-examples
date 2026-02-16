@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+vendor/
+.next/
+target/
+
+# Build artifacts
+bin/
+obj/
+out/
+*.class
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db

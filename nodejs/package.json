@@ -1,0 +1,19 @@
+{
+  "name": "moderyo-example-nodejs",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "tsx server.ts",
+    "dev": "tsx watch server.ts"
+  },
+  "dependencies": {
+    "@moderyo/sdk": "^2.0.7",
+    "express": "^4.21.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
