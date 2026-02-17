@@ -52,7 +52,7 @@ public class Application {
                     "blocked", result.isBlocked(),
                     "flagged", result.needsReview(),
                     "decision", result.getPolicyDecision() != null ? result.getPolicyDecision().getDecision() : "ALLOW",
-                    "reason", result.getPolicyDecision() != null ? result.getPolicyDecision().getReason() : ""
+                    "reason", result.getPolicyDecision() != null && result.getPolicyDecision().getReason() != null ? result.getPolicyDecision().getReason() : ""
             ));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
