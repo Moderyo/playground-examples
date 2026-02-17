@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	moderyo "github.com/moderyo/moderyo-go"
+	moderyo "github.com/moderyo/moderyo-go/v2"
 )
 
 type ModerateInput struct {
@@ -64,14 +64,17 @@ func main() {
 			return
 		}
 
+		respData := map[string]interface{}{
+			"blocked": result.IsBlocked(),
+			"flagged": result.IsFlagged(),
+			"scores":  result.Scores,
+		}
+		if result.PolicyDecision != nil {
+			respData["decision"] = result.PolicyDecision.Decision
+			respData["reason"] = result.PolicyDecision.Reason
+		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"blocked":  result.IsBlocked(),
-			"flagged":  result.IsFlagged(),
-			"decision": result.PolicyDecision.Decision,
-			"reason":   result.PolicyDecision.Reason,
-			"scores":   result.Scores,
-		})
+		json.NewEncoder(w).Encode(respData)
 	})
 
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {

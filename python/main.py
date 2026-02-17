@@ -21,23 +21,26 @@ class ModerateRequest(BaseModel):
     skip_threat: bool = False
     skip_masked_word: bool = False
     long_text_mode: bool = False
-    long_text_threshold: float = 0.3
+    long_text_threshold: int | None = None
 
 
 @app.post("/api/moderate")
 async def moderate(req: ModerateRequest):
     try:
-        result = client.moderate(
-            req.input,
+        kwargs = dict(
             mode=req.mode,
             risk=req.risk,
-            player_id=req.player_id or None,
             skip_profanity=req.skip_profanity,
             skip_threat=req.skip_threat,
             skip_masked_word=req.skip_masked_word,
             long_text_mode=req.long_text_mode,
-            long_text_threshold=req.long_text_threshold,
         )
+        if req.player_id:
+            kwargs["player_id"] = req.player_id
+        if req.long_text_threshold is not None:
+            kwargs["long_text_threshold"] = req.long_text_threshold
+
+        result = client.moderate(req.input, **kwargs)
 
         return {
             "blocked": result.is_blocked,
