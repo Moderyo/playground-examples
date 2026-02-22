@@ -52,6 +52,46 @@ $app->post('/api/moderate', function (Request $request, Response $response) use 
     }
 });
 
+$app->post('/api/moderate/batch', function (Request $request, Response $response) use ($client) {
+    $body = $request->getParsedBody();
+    $inputs = $body['inputs'] ?? [];
+
+    if (empty($inputs) || !is_array($inputs)) {
+        $response->getBody()->write(json_encode(['error' => 'inputs array is required']));
+        return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+    }
+
+    try {
+        $result = $client->moderateBatch($inputs, [
+            'mode' => $body['mode'] ?? 'enforce',
+            'risk' => $body['risk'] ?? 'balanced',
+        ]);
+
+        $items = [];
+        foreach ($result->results as $r) {
+            $items[] = [
+                'blocked' => $r->isBlocked,
+                'flagged' => $r->isFlagged,
+                'decision' => $r->policyDecision->decision ?? null,
+                'reason' => $r->policyDecision->reason ?? null,
+            ];
+        }
+
+        $data = [
+            'total' => count($result->results),
+            'blockedCount' => count($result->getBlocked()),
+            'flaggedCount' => count($result->getFlagged()),
+            'results' => $items,
+        ];
+
+        $response->getBody()->write(json_encode($data));
+        return $response->withHeader('Content-Type', 'application/json');
+    } catch (\Exception $e) {
+        $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+        return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+    }
+});
+
 $app->get('/health', function (Request $request, Response $response) {
     $response->getBody()->write(json_encode([
         'status' => 'ok',

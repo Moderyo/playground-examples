@@ -49,11 +49,49 @@ app.MapPost("/api/moderate", async (HttpContext ctx) =>
     }
 });
 
+app.MapPost("/api/moderate/batch", async (HttpContext ctx) =>
+{
+    var body = await ctx.Request.ReadFromJsonAsync<BatchInput>();
+    if (body == null || body.Inputs == null || body.Inputs.Length == 0)
+        return Results.BadRequest(new { error = "inputs array is required" });
+
+    try
+    {
+        var options = new ModerationOptions
+        {
+            Mode = body.Mode ?? "enforce",
+            Risk = body.Risk ?? "balanced",
+        };
+
+        var result = await client.ModerateBatchAsync(body.Inputs, options);
+
+        var items = result.Results.Select(r => new
+        {
+            blocked = r.IsBlocked,
+            flagged = r.IsFlagged,
+            decision = r.PolicyDecision?.DecisionValue,
+            reason = r.PolicyDecision?.Reason,
+        }).ToArray();
+
+        return Results.Ok(new
+        {
+            total = result.Total,
+            blockedCount = result.BlockedCount,
+            flaggedCount = result.FlaggedCount,
+            results = items,
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(detail: ex.Message);
+    }
+});
+
 app.MapGet("/health", () => new { status = "ok", sdk = "moderyo-dotnet", version = "2.0.7" });
 
 app.Run();
 
-// ─── Input DTO ───
+// ─── Input DTOs ───
 record ModerateInput(
     string Input,
     string? Mode = null,
@@ -63,4 +101,10 @@ record ModerateInput(
     bool SkipThreat = false,
     bool SkipMaskedWord = false,
     bool LongTextMode = false
+);
+
+record BatchInput(
+    string[] Inputs,
+    string? Mode = null,
+    string? Risk = null
 );
